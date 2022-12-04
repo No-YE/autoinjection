@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import test from 'ava'
 import { Service, Inject } from '../src'
 

@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import { type Class } from '../types'
 import { injectParameterIndexMap } from './inject'
 
