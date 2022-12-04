@@ -38,6 +38,11 @@ To use autoinjection with interface, add `plugins` option also.
 }
 ```
 
+And use the following command to compile.
+```sh
+ttsc
+```
+
 ## Usage
 with class
 ```ts
