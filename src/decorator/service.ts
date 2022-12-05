@@ -2,15 +2,25 @@ import { type Class } from '../types'
 import { injectParameterIndexMap } from './inject'
 
 const serviceClassInfos: Array<ClassInfo> = []
+const singletonInstanceMap = new Map<Class, object>()
+
+type Options = {
+  singleton?: boolean,
+}
 
 type ClassInfo = {
   klass: Class,
+  singleton: boolean
   implementations?: Array<string>,
 }
 
-export const Service = () => {
+export const Service = (options?: Options) => {
   return <T extends Class>(target: T) => {
-    serviceClassInfos.push({ klass: target, implementations: Reflect.getMetadata('autoinjection:implementations', target) })
+    serviceClassInfos.push({
+      klass: target,
+      singleton: Boolean(options?.singleton),
+      implementations: Reflect.getMetadata('autoinjection:implementations', target),
+    })
 
     const originParamTypes: Array<Class | undefined> = Reflect.getOwnMetadata('design:paramtypes', target) ?? []
     const interfaceParamtypes: Array<string | undefined> = Reflect.getMetadata('autoinjection:interfaceParamtypes', target) ?? []
@@ -29,7 +39,11 @@ export const Service = () => {
             ? serviceClassInfos.find((info) => info.implementations?.includes(paramType))
             : serviceClassInfos.find((info) => info.klass === paramType || paramType.prototype instanceof info.klass)
 
-          return classInfo ? new classInfo.klass() : args[index]
+          if (!classInfo) {
+            return args[index]
+          }
+
+          return classInfo.singleton ? getSingletonInstance(classInfo.klass) : new classInfo.klass()
         })        
 
         super(...injectedArgs)
@@ -40,4 +54,16 @@ export const Service = () => {
 
 function isInterfaceParamTypes(value: any): value is string {
   return typeof value === 'string'
+}
+
+function getSingletonInstance(klass: Class) {
+  const singletonInstance = singletonInstanceMap.get(klass) 
+
+  if (singletonInstance) {
+    return singletonInstance
+  }
+
+  const instance = new klass()
+  singletonInstanceMap.set(klass, instance)
+  return instance
 }

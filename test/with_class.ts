@@ -25,3 +25,20 @@ test('Parameters without Indect decorators should not have dependency injected',
 
   t.is(new Bar().foo, undefined)
 })
+
+test('A class that has Service with singleton option should be injected as singleton', (t) => {
+  @Service({ singleton: true })
+  class Foo {
+    value = 0
+  }
+
+  @Service()
+  class Bar {
+    constructor(@Inject() public foo?: Foo) {
+      foo!.value++
+    }
+  }
+
+  t.is(new Bar().foo?.value, 1)
+  t.is(new Bar().foo?.value, 2)
+})
