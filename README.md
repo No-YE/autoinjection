@@ -91,3 +91,29 @@ class Bar {
 
 new Bar().print() // foo
 ```
+
+inject dependency as singleton
+```ts
+import { Service, Inject } from 'autoinjection'
+
+@Service({ singleton: true })
+class Foo {
+  value = 0
+  print() {
+    console.log(this.value)
+    value++
+  }
+}
+
+@Service()
+class Bar {
+  constructor(@Inject() private foo?: Foo) { }
+
+  print() {
+    this.foo?.print()
+  }
+}
+
+new Bar().print() // 0
+new Bar().print() // 1
+```
