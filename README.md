@@ -32,7 +32,7 @@ To use autoinjection with interface, add `plugins` option also.
 {
   "plugins": [
     {
-      "transform": "autoject/lib/transform",
+      "transform": "autoinjection/lib/transform",
     }
   ]
 }
