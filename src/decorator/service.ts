@@ -31,6 +31,10 @@ export const Service = (options?: Options) => {
     return class extends target {
       constructor(...args: any[]) {
         const injectedArgs = paramTypes.map((paramType, index) => {
+          if (args.length > index) {
+            return args[index]
+          }
+
           if (!paramType|| !injectParameterIndex.has(index)) {
             return args[index]
           }

@@ -1,6 +1,6 @@
 {
   "name": "autoinjection",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Automatic Dependency Injectoin for TypeScript.",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
