@@ -57,3 +57,20 @@ test('A class that has Service with singleton option should be injected as singl
   t.is(new Bar().foo?.value, 1)
   t.is(new Bar().foo?.value, 2)
 })
+
+test('A class can be injected with instances of classes that have been injected with dependencies.', (t) => {
+  @Service()
+  class Foo { }
+
+  @Service()
+  class Bar {
+    constructor(@Inject() public foo?: Foo) { }
+  }
+
+  @Service()
+  class Baz {
+    constructor(@Inject() public bar?: Bar) { }
+  }
+
+  t.not(new Baz().bar?.foo, undefined)
+})

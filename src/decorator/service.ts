@@ -16,19 +16,13 @@ type ClassInfo = {
 
 export const Service = (options?: Options) => {
   return <T extends Class>(target: T) => {
-    serviceClassInfos.push({
-      klass: target,
-      singleton: Boolean(options?.singleton),
-      implementations: Reflect.getMetadata('autoinjection:implementations', target),
-    })
-
     const originParamTypes: Array<Class | undefined> = Reflect.getOwnMetadata('design:paramtypes', target) ?? []
     const interfaceParamtypes: Array<string | undefined> = Reflect.getMetadata('autoinjection:interfaceParamtypes', target) ?? []
     const paramTypes = originParamTypes.map((originParamType, index) => interfaceParamtypes[index] ?? originParamType)
 
     const injectParameterIndex = injectParameterIndexMap.get(target) ?? new Set()
 
-    return class extends target {
+    class NewClass extends target {
       constructor(...args: any[]) {
         const injectedArgs = paramTypes.map((paramType, index) => {
           if (args.length > index) {
@@ -53,6 +47,14 @@ export const Service = (options?: Options) => {
         super(...injectedArgs)
       }
     }
+
+    serviceClassInfos.push({
+      klass: NewClass,
+      singleton: Boolean(options?.singleton),
+      implementations: Reflect.getMetadata('autoinjection:implementations', target),
+    })
+
+    return NewClass
   }
 }
 
