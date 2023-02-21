@@ -1,5 +1,5 @@
 import { type Class } from '../types'
-import { injectParameterIndexMap } from './inject'
+import { injectedParameterIndexesMap } from './inject'
 
 const serviceClassInfos: Array<ClassInfo> = []
 const singletonInstanceMap = new Map<Class, object>()
@@ -16,21 +16,19 @@ type ClassInfo = {
 
 export const Service = (options?: Options) => {
   return <T extends Class>(target: T) => {
-    const originParamTypes: Array<Class | undefined> = Reflect.getOwnMetadata('design:paramtypes', target) ?? []
-    const interfaceParamtypes: Array<string | undefined> = Reflect.getMetadata('autoinjection:interfaceParamtypes', target) ?? []
-    const paramTypes = originParamTypes.map((originParamType, index) => interfaceParamtypes[index] ?? originParamType)
-
-    const injectParameterIndex = injectParameterIndexMap.get(target) ?? new Set()
+    const paramTypes = getParamTypes(target)
+    const injectParameterIndexes = injectedParameterIndexesMap.get(target) ?? new Set()
 
     class NewClass extends target {
       constructor(...args: any[]) {
         const injectedArgs = paramTypes.map((paramType, index) => {
-          if (args.length > index) {
-            return args[index]
-          }
+          const originArg = args[index]
 
-          if (!paramType|| !injectParameterIndex.has(index)) {
-            return args[index]
+          if (args.length > index) {
+            return originArg
+          }
+          if (!paramType || !injectParameterIndexes.has(index)) {
+            return originArg
           }
 
           const classInfo = isInterfaceParamTypes(paramType)
@@ -38,7 +36,7 @@ export const Service = (options?: Options) => {
             : serviceClassInfos.find((info) => info.klass === paramType || paramType.prototype instanceof info.klass)
 
           if (!classInfo) {
-            return args[index]
+            return originArg
           }
 
           return classInfo.singleton ? getSingletonInstance(classInfo.klass) : new classInfo.klass()
@@ -56,6 +54,13 @@ export const Service = (options?: Options) => {
 
     return NewClass
   }
+}
+
+function getParamTypes(target: Class) {
+  const originParamTypes: Array<Class | undefined> = Reflect.getOwnMetadata('design:paramtypes', target) ?? []
+  const interfaceParamtypes: Array<string | undefined> = Reflect.getMetadata('autoinjection:interfaceParamtypes', target) ?? []
+
+  return originParamTypes.map((originParamType, index) => interfaceParamtypes[index] ?? originParamType)
 }
 
 function isInterfaceParamTypes(value: any): value is string {
